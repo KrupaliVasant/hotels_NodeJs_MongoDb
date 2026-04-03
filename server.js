@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+require('dotenv').config(); //it should be first line of the nelow line
 const db = require('./db');
 
 // comming data converted into javascrip json formate
@@ -31,6 +32,8 @@ app.use('/person', personRoutes);
 const menuItemRoutes = require('./routes/menuItemRoutes');
 app.use('/menuitem', menuItemRoutes);
 
-app.listen(3000, () => {
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
     console.log('Server is running on port 3000');
 });

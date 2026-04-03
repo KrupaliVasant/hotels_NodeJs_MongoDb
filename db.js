@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
 
 //define the MongoDB connection URL
-const mongoURL = 'mongodb://127.0.0.1:27017/hotels'; //'hotels' is mydatabasename
+//const mongoURL_LOCAL = process.env.MONGODB_URL_LOCAL; //'hotels' is mydatabasename
+const mongoURL = process.env.MONGODB_URL;   //mongodb atlas
+//const mongoURL_LOCAL = process.env.MONGODB_URL_LOCAL; //'hotels' is mydatabasename
 
 //set up MongoDB connection 
 mongoose.connect(mongoURL)
