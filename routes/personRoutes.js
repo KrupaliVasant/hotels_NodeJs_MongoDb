@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 
 const Person = require('./../models/person');
+const { jwtAuthMiddleware, generateToken } = require('./../jwt');
 
 // POST route to add person
-router.post('/', async (req, res) => {
+router.post('/signup', async (req, res) => {
     try {
         const newPersonData = req.body //assuming  the request body contains the person data 
 
@@ -14,7 +15,62 @@ router.post('/', async (req, res) => {
         // save the new person to the database
         const response = await newPerson.save();
         console.log("data saved.");
-        res.status(200).json(response);
+
+        const payload = {
+            id: response._id,
+            username: response.username,
+        }
+        console.log(JSON.stringify(payload))
+        const token = generateToken(payload);
+        console.log("Token is:", token);
+
+        res.status(200).json({ response: response, token: token });
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Login route
+router.post('/login', async (req, res) => {
+    try {
+        // Extract username and password from request body
+        const { username, password } = req.body;
+
+        // Find the user by username
+        const user = await Person.findOne({ username: username });
+
+        // /if user does not exist or password does not match, return an error response
+        if (!user || (!(await user.comparePassword(password)))) {
+            return res.status(401).json({ error: 'Invalid username or password' });
+        }
+
+        // generate tokens
+        const payload = {
+            id: user._id,
+            username: user.username,
+        }
+
+        const token = generateToken(payload);
+        res.json({ token });
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Profile route
+router.get('/profile', jwtAuthMiddleware, async (req, res) => {
+    try {
+        const userData = req.user;
+        console.log("User data from token:", userData);
+
+        const userId = userData.id;
+        const user = await Person.findById(userId);
+
+        res.status(200).json({ profile: user });
 
     } catch (err) {
         console.log(err);
@@ -23,35 +79,35 @@ router.post('/', async (req, res) => {
 });
 
 // GET method for fetch data
-router.get('/', async (req, res) => {
-    try{
+router.get('/', jwtAuthMiddleware, async (req, res) => {
+    try {
         const data = await Person.find();
         console.log("data fetched.");
         res.status(200).json(data);
     } catch (err) {
         console.log(err);
-        res.status(500).json({error: 'Internal server error'});
+        res.status(500).json({ error: 'Internal server error' });
     }
 })
 
-router.get('/:workType', async (req,res) => {
-    try{
+router.get('/:workType', async (req, res) => {
+    try {
         const workType = req.params.workType;
-        if(workType == 'chef' || workType == 'manager' || workType == 'waiter'){
-            const response = await Person.find({work:workType});
+        if (workType == 'chef' || workType == 'manager' || workType == 'waiter') {
+            const response = await Person.find({ work: workType });
             console.log('response fetched');
             res.status(200).json(response)
-        }else{
-            res.status(404).json({error: 'Invalid work type'})
+        } else {
+            res.status(404).json({ error: 'Invalid work type' })
         }
-    } catch(err){
+    } catch (err) {
         console.log(err);
-        res.status(500).json({error: 'Internal server error'});
+        res.status(500).json({ error: 'Internal server error' });
     }
 })
 
 router.put('/:id', async (req, res) => {
-    try{   
+    try {
         const personId = req.params.id;    //Extract the id from the URL parameter
         const updatedPersonalData = req.body;   //updated data for person
 
@@ -60,32 +116,32 @@ router.put('/:id', async (req, res) => {
             runValidators: true,
         })
 
-        if(!response){
-            return res.status(404).json({error : 'Person not found'});
+        if (!response) {
+            return res.status(404).json({ error: 'Person not found' });
         }
 
         console.log('data updated');
         res.status(200).json(response);
 
-    } catch(err){
+    } catch (err) {
         console.log(err);
-        res.status(500).json({error: 'Internal server error'});
+        res.status(500).json({ error: 'Internal server error' });
     }
 })
 
-router.delete('/:id', async(req,res) => {
-    try{
+router.delete('/:id', async (req, res) => {
+    try {
         const personId = req.params.id;
         const response = await Person.findByIdAndDelete(personId);
-        
-        if(!response){
-            return res.status(404).json({error: 'Person not found'});
+
+        if (!response) {
+            return res.status(404).json({ error: 'Person not found' });
         }
         console.log('data deleted');
-        res.status(200).json({message: 'person deleted successfully'})
-    }catch(err){
+        res.status(200).json({ message: 'person deleted successfully' })
+    } catch (err) {
         console.log(err);
-        res.status(500).json({error: 'Internal server error'});
+        res.status(500).json({ error: 'Internal server error' });
     }
 })
 

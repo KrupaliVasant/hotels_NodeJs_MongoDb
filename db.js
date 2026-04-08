@@ -2,11 +2,11 @@ const mongoose = require('mongoose');
 
 //define the MongoDB connection URL
 //const mongoURL_LOCAL = process.env.MONGODB_URL_LOCAL; //'hotels' is mydatabasename
-const mongoURL = process.env.MONGODB_URL;   //mongodb atlas
-//const mongoURL_LOCAL = process.env.MONGODB_URL_LOCAL; //'hotels' is mydatabasename
+//const mongoURL = process.env.MONGODB_URL;   //mongodb atlas
+const mongoURL_LOCAL = process.env.MONGODB_URL_LOCAL; //'hotels' is mydatabasename
 
 //set up MongoDB connection 
-mongoose.connect(mongoURL)
+mongoose.connect(mongoURL_LOCAL)
     .then(() => console.log("successfully"))
     .catch(() => console.log("error"));
 
